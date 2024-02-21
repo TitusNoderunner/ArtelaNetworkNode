@@ -1,39 +1,48 @@
 #!/bin/bash
 
-# Install Go
-wget https://golang.org/dl/go1.20.3.linux-amd64.tar.gz
-sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.20.3.linux-amd64.tar.gz
-export PATH=$PATH:/usr/local/go/bin
+# Set up variables
+MONIKER="my-wallet"
+WALLET="my-wallet"
+SEEDS=("my-seed")
+PEERS=("my-peer")
 
-# Create workspace and clone repositories
-mkdir -p /home/user1/go/src
-export GOPATH=/home/user1/go
-cd $GOPATH/src
-git clone https://github.com/artela-network/artela-cometbft.git
-git clone https://github.com/artela-network/artela-cosmos-sdk.git
-git clone https://github.com/artela-network/artela.git
-
-# Build the Artela binary
-cd artelamake clean && make
-
-# Install Docker and Docker Compose
-sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
+# Install dependencies
 sudo apt-get update
-sudo apt-get install docker-ce
-sudo apt-get install docker-compose
+sudo apt-get install -y curl jq docker-ce docker-compose
 
-# Create a testnet and start the nodes
-cd artela/testnetmake create-testnet
+# Set up Docker
+sudo systemctl enable docker
+sudo systemctl start docker
 
-# Start the node
-MONIKER="my-node"
-WALLET_NAME="my-wallet"
+# Clone the repository
+git clone https://github.com/artela-network/artela-cometbft.git
+cd artela-cometbft
 
-# Replace the MONIKER and WALLET_NAME in the config files
-sed -i "s/moniker = \"\"/moniker = \"$MONIKER\"/g" $GOPATH/src/artela/testnet/config/config.toml
-sed -i "s/name = \"\"/name = \"$WALLET_NAME\"/g" $GOPATH/src/artela/testnet/config/config.toml
+# Build the binary
+make build
+
+# Create the necessary directories
+mkdir -p ~/.artelad/config
+
+# Generate the genesis.json file
+./build/artelad init $MONIKER --chain-id testnet
+
+# Generate the config.toml file
+./build/artelad config chain-id testnet
+./build/artelad config p2p.seeds "$(IFS=, ; echo "${SEEDS[*]}")"
+./build/artelad config p2p.persistent-peers "http://127.0.0.1:26657"
+./build/artelad config moniker "$MONIKER"
+./build/artelad config fastsync.version "v0"
+./build/artelad config fastsync.enable true
+./build/artelad config fastsync.rpc-servers "http://127.0.0.1:26658"
+
+# Calculate the trust hash
+GENESIS_FILE=~/.artelad/config/genesis.json
+GENESIS_HASH=$(jq -r '.app_hash' $GENESIS_FILE)
+
+# Set the trust hash
+./build/artelad config fastsync.trust-height 1
+./build/artelad config fastsync.trust-hash "$GENESIS_HASH"
 
 # Start the node
 artelad start --pruning=nothing --log_level debug --minimum-gas-prices=0.0001art --api.enable --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable
