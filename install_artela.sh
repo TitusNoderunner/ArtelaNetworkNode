@@ -75,3 +75,10 @@ sed -i -e "s/^persistent_peers *=.*/persistent_peers = \"$PEERS\"/" $HOME/.artel
 
 # Start the node
 artelad start --pruning=nothing --log_level debug --minimum-gas-prices=0.0001art --api.enable --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable
+
+# Print the splash banner
+echo -e "\033[1;32m
++-+-+-+-+-+-+-+-+-+-+-+
+|N|o|d|e|r|u|n|n|e|r|s|
++-+-+-+-+-+-+-+-+-+-+-+
+\033[0m"
