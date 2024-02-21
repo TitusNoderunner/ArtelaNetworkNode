@@ -1,12 +1,16 @@
 #!/bin/bash
 
+# Install lolcat and figlet
+sudo apt-get install lolcat figlet -y
+
 # Display splash banner
-echo -e "\e[1;36m█▀▄▀█ ─█▀█─ █▄─█─ █▀█─ █▀█─\e[0m"
-echo -e "\e[1;36m█ x.com/TitusNoderunner\e[0m"
-echo -e "\e[1;36m█ █▄█─ █▄█── ██─█─ █▄█── █▄█──\e[0m"
-echo -e "\e[1;36m▀─────────────────────────\e[0m"
-Follow me on X
-echo -e "\e[1;36m─────────────────────────\e[0m"
+figlet -f slant "Titus" | lolcat
+
+# Prompt for MONIKER and WALLET input
+echo "Enter your MONIKER name:"
+read MONIKER
+echo "Enter your WALLET name:"
+read WALLET
 
 # Update and install necessary packages
 sudo apt-get update
@@ -36,19 +40,17 @@ sudo apt-get update
 sudo apt-get install docker-ce
 sudo apt-get install docker-compose
 
-# Install lolcat and figlet
-sudo apt-get install lolcat figlet -y
+# Create a testnet and start the nodes
+cd artela/testnet
+./create-testnet
 
-# Update packages and install essential tools
-sudo apt update && sudo apt upgrade -y
-sudo apt-get update && sudo apt-get install software-properties-common -y
-apt install curl iptables build-essential git wget jq make gcc nano tmux htop lz4 nvme-cli pkg-config libssl-dev libleveldb-dev tar clang bsdmainutils ncdu unzip libleveldb-dev -y
+# Initialize your node
+artelad init "$MONIKER" --chain-id artela_11822-1
 
-# Prompt for WALLET and MONIKER input
-echo "Enter your WALLET name:"
-read WALLET
-echo "Enter your MONIKER name:"
-read MONIKER
+# Download the genesis.json file and add persistent seeds
+wget -qO $HOME/.artelad/config/genesis.json https://docs.artela.network/assets/files/genesis-314f4b0294712c1bc6c3f4213fa76465.json
+SEEDS="8d0c626443a970034dc12df960ae1b1012ccd96a@artela-testnet-seed.itrocket.net:30656"
+PEERS="5c9b1bc492aad27a0197a6d3ea3ec9296504e6fd@artela-testnet-peer.itrocket.net:30656,e60ccf5954cf2f324bbe0da7eada0a98437eab29@[2a03:4000:4c:e90:781d:c8ff:fe57:726a]:9656,cc926b13a1be8b3c82cbca5bc137c04055c29d66@54.197.218.54:26656,9142bc72d918a36754d64e90f66b382f6d98f67b@161.35.157.41:45656,615a32fbf484e711562fe93b64cc069e1e5f49ab@185.230.138.142:45656,4ff338"
 
 # Set up necessary variables
 echo "export WALLET=$WALLET" >> $HOME/.bash_profile
@@ -63,24 +65,5 @@ cd artela
 git checkout main
 make install
 
-# Initialize your node
-artelad init "$MONIKER" --chain-id "$ARTELA_CHAIN_ID"
-
-# Download the genesis.json file and add persistent seeds
-wget -qO $HOME/.artelad/config/genesis.json https://raw.githubusercontent.com/artela-network/testnet/main/genesis.json
-SEEDS="8d0c626443a970034dc12df960ae1b1012ccd96a@artela-testnet-seed.itrocket.net:30656"
-PEERS="5c9b1bc492aad27a0197a6d3ea3ec9296504e6fd@artela-testnet-peer.itrocket.net:30656,e60ccf5954cf2f324bbe0da7eada0a98437eab29@[2a03:4000:4c:e90:781d:c8ff:fe8e:252c]:30656"
-sed -i -e "s/^moniker *=.*/moniker = \"$MONIKER\"/g" /home/user1/.artelad/config/config.toml
-sed -i -e "s/^chain-id *=.*/chain-id = \"$CHAIN_ID\"/g" /home/user1/.artelad/config/config.toml
-sed -i -e "s/^seeds *=.*/seeds = \"$SEEDS\"/g" /home/user1/.artelad/config/config.toml
-sed -i -e "s/^persistent_peers *=.*/persistent_peers = \"$PEERS\"/g" /home/user1/.artelad/config/config.toml
-
 # Start the node
 artelad start --pruning=nothing --log_level debug --minimum-gas-prices=0.0001art --api.enable --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable
-
-# Print the splash banner
-echo -e "\033[1;32m
-+-+-+-+-+-+-+-+-+-+-+-+
-|N|o|d|e|r|u|n|n|e|r|s|
-+-+-+-+-+-+-+-+-+-+-+-+
-\033[0m"
