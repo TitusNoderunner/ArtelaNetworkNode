@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# Install lolcat and figlet
-sudo apt-get install lolcat figlet -y
-
-# Display splash banner
-figlet -f slant "Titus" | lolcat
-
 # Prompt for MONIKER and WALLET input
 echo "Enter your MONIKER name:"
 read MONIKER
