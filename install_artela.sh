@@ -70,8 +70,10 @@ artelad init "$MONIKER" --chain-id "$ARTELA_CHAIN_ID"
 wget -qO $HOME/.artelad/config/genesis.json https://raw.githubusercontent.com/artela-network/testnet/main/genesis.json
 SEEDS="8d0c626443a970034dc12df960ae1b1012ccd96a@artela-testnet-seed.itrocket.net:30656"
 PEERS="5c9b1bc492aad27a0197a6d3ea3ec9296504e6fd@artela-testnet-peer.itrocket.net:30656,e60ccf5954cf2f324bbe0da7eada0a98437eab29@[2a03:4000:4c:e90:781d:c8ff:fe8e:252c]:30656"
-sed -i -e "s/^seeds *=.*/seeds = \"$SEEDS\"/" $HOME/.artelad/config/config.toml
-sed -i -e "s/^persistent_peers *=.*/persistent_peers = \"$PEERS\"/" $HOME/.artelad/config/config.toml
+sed -i -e "s/^moniker *=.*/moniker = \"$MONIKER\"/g" /home/user1/.artelad/config/config.toml
+sed -i -e "s/^chain-id *=.*/chain-id = \"$CHAIN_ID\"/g" /home/user1/.artelad/config/config.toml
+sed -i -e "s/^seeds *=.*/seeds = \"$SEEDS\"/g" /home/user1/.artelad/config/config.toml
+sed -i -e "s/^persistent_peers *=.*/persistent_peers = \"$PEERS\"/g" /home/user1/.artelad/config/config.toml
 
 # Start the node
 artelad start --pruning=nothing --log_level debug --minimum-gas-prices=0.0001art --api.enable --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable
